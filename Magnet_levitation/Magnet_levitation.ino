@@ -6,17 +6,19 @@
  */
  
 #include <TimerOne.h>
-
+#define ref_in      A2
 #define hall        A0
-#define magnetic    6
-#define filter      0.4f   
+#define magnetic    5
+#define filter      0.30f   
 #define sampling    1000.0f 
 
 //float state_g = 0;
 //float prev_state_g = 0;
 
 float state = 0;
+float state_f = 0;
 float prev_state = 0;
+float prev_state_f = 0;
 float ref = 7;
 float error =0;
 float prev_error =0;
@@ -24,16 +26,16 @@ float error_dot = 0;
 float error_sum =0;
 
 float kp =500;
-float ki =10;
-float kd =3.6;
-
+float ki =30;
+float kd =3.65;
 float output  = 0;
 
 void setup() 
 {
   Serial.begin(115200);
+  pinMode(ref_in, INPUT);
   pinMode(hall, INPUT);
-  pinMode(A1, INPUT);
+ 
   pinMode(output, OUTPUT);
   pinMode(12, OUTPUT); 
   
@@ -44,25 +46,39 @@ void setup()
 void loop() 
 {
   
-  delay(1000);
-//    Serial.print(state);
-//    Serial.print(ki);
-//    Serial.print("     ");
-//    Serial.print(error);
-//    Serial.print("     ");    
-//    Serial.print(error_sum);
-//    Serial.print("     "); 
-//    Serial.println(output);
+delay(200);
+
+    Serial.print("Ref ");
+    Serial.print(ref);
+    Serial.print("     ");
+    Serial.print("State ");
+    Serial.print(state);
+    Serial.print("     ");  
+    Serial.print("Error ");
+    Serial.print(error);
+    Serial.print("     "); 
+    Serial.print("Error_sum ");
+    Serial.print(error_sum);
+    Serial.print("     ");
+    Serial.print("Error_dot ");
+    Serial.print(error_dot);
+    Serial.print("     ");    
+    Serial.print("Output "); 
+    Serial.println(output);
 }
 
 void PID(void) 
 {  
   digitalWrite(12,1);
   
-//  prev_state_g = state_g ;
-//  state_g = prev_state_g + (filter*(((float)(analogRead(A1))/100.0f)-prev_state_g));
-//  ki = state_g /1.0f ;
-
+  prev_state_f = state_f ;
+  state_f = prev_state_f + (0.05*(((float)(analogRead(ref_in))/100.0f)-prev_state_f));
+  ref = state_f/3.3f  ;
+  
+  /*  Update Kd gain  */
+  kd =3.65 + ref*3.6f ;  
+  ref = 6.3f + ref;
+  
   prev_state = state ;
   state = prev_state + (filter*(((float)(analogRead(hall))/100.0f)-prev_state));
 
@@ -71,17 +87,17 @@ void PID(void)
   error_dot = (error - prev_error)*sampling;
   error_sum = error_sum + error/sampling;
   
-  output = kp*error + ki*error_sum + kd*error_dot ;
+  output = kp*error + ki*error_sum + kd*error_dot + 220;
   
   if(output<0)   output = 0;
   if(output>255) output = 255;
   
-  if(state < 5.6)
+  if(state < 6)
   {
     output = 0;
     error_sum=0;
   }
-  
+//  output = 0;
   analogWrite(magnetic,output);
   digitalWrite(12,0);
 }
