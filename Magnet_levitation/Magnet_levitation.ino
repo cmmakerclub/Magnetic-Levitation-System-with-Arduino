@@ -1,7 +1,7 @@
 /*
   magnetic levitation
   Chiangmai Maker Club
-  modified 05122014
+  modified 05-12-2014
   by wasin wongkum
  */
  
