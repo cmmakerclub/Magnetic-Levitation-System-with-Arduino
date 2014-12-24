@@ -3,11 +3,15 @@
   Chiangmai Maker Club
   modified 05-12-2014
   by wasin wongkum
+  sensor hall sensor A1302
+  mosfet irf 540n
+  supply 12v
+  coil 10 ohm
  */
  
 #include <TimerOne.h>
 #define ref_in      A2
-#define hall        A0
+#define hall        A0 
 #define magnetic    5
 #define filter      0.30f   
 #define sampling    1000.0f 
@@ -32,6 +36,7 @@ float output  = 0;
 
 void setup() 
 {
+  TCCR0B = TCCR0B & B11111000 | B00000001;    // set timer 0 divisor to     1 for PWM frequency of 62500.00 Hz // divisor change from 64 --> 1 
   Serial.begin(115200);
   pinMode(ref_in, INPUT);
   pinMode(hall, INPUT);
@@ -46,7 +51,7 @@ void setup()
 void loop() 
 {
   
-delay(200);
+delay(200*64); // divisor change from 64 --> 1  
 
     Serial.print("Ref ");
     Serial.print(ref);
@@ -75,10 +80,14 @@ void PID(void)
   state_f = prev_state_f + (0.05*(((float)(analogRead(ref_in))/100.0f)-prev_state_f));
   ref = state_f/3.3f  ;
   
+  
+  /* if fix referent */
+  ref = 0.8  ;
+  
   /*  Update Kd gain  */
   kd =3.65 + ref*3.6f ;  
   ref = 6.3f + ref;
-  
+
   prev_state = state ;
   state = prev_state + (filter*(((float)(analogRead(hall))/100.0f)-prev_state));
 
